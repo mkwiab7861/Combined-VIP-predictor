@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="ur">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>WinGo 30S & 1M Auto-Switch Balance Engine | اصف ونگو ایکسپرٹ</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800;900&display=swap');
+
+        :root {
+            --bg-deep: #030712;
+            --card-glass: rgba(13, 18, 36, 0.96);
+            --white-stroke: rgba(255, 255, 255, 0.85);
+            --accent-cyan: #00f2fe;
+            --accent-green: #10b981;
+            --accent-red: #ff3366;
+            --gold: #ffb703;
+            --text-main: #f8fafc;
+            --text-sub: #94a3b8;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', system-ui, sans-serif; }
+        body { background-color: var(--bg-deep); color: var(--text-main); display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding: 6px; }
+
+        .app-card {
+            width: 100%; max-width: 460px; background: var(--card-glass);
+            backdrop-filter: blur(20px); border-radius: 20px; padding: 12px;
+            border: 1.5px solid var(--white-stroke); box-shadow: 0 0 25px rgba(0,242,254,0.15);
+        }
+
+        .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+        .header-title h1 { font-size: 7px; color: #fff; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; }
+        .sync-badge { background: rgba(16, 185, 129, 0.2); color: var(--accent-green); border: 1px solid var(--accent-green); font-size: 8px; font-weight: 800; padding: 3px 6px; border-radius: 10px; }
+
+        .period-box {
+            background: rgba(3, 7, 18, 0.65); border-radius: 10px; padding: 6px 10px;
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; align-items: center; margin-bottom: 6px; border: 1px solid rgba(255, 255, 255, 0.12);
+        }
+
+        .timers-row {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 6px;
+        }
+        .timer-container {
+            background: rgba(3, 7, 18, 0.75); border-radius: 10px; padding: 4px 8px; border: 1px solid rgba(255, 255, 255, 0.12); text-align: center;
+        }
+        .timer-sub { font-size: 7px; color: var(--text-sub); font-weight: 800; }
+        .timer-clock { font-size: 14px; font-weight: 900; color: var(--accent-green); font-family: monospace; }
+
+        .compare-bar {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 8px;
+        }
+        .cmp-box {
+            background: rgba(3, 7, 18, 0.78); border: 1px solid rgba(255, 255, 255, 0.14);
+            border-radius: 9px; padding: 6px 8px; font-size: 8px;
+        }
+        .cmp-box.active-feed {
+            border-color: var(--accent-green); box-shadow: 0 0 12px rgba(16, 185, 129, 0.25);
+        }
+        .cmp-title { font-weight: 800; color: var(--gold); display: flex; justify-content: space-between; align-items: center; }
+        .cmp-stats { font-weight: 900; color: #fff; margin-top: 2px; display: flex; justify-content: space-between; }
+        .cmp-sub { font-size: 7px; color: var(--text-sub); margin-top: 2px; display: flex; justify-content: space-between; }
+
+        .trend-grid {
+            display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; margin-bottom: 8px;
+        }
+        .trend-card {
+            background: rgba(3, 7, 18, 0.7); border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px; padding: 6px 8px; font-size: 7.5px;
+        }
+        .trend-name { color: var(--gold); font-weight: 800; margin-bottom: 2px; display: flex; justify-content: space-between; }
+        .trend-val { font-weight: 900; color: #fff; display: flex; justify-content: space-between; margin-top: 2px; font-size: 8.5px; }
+
+        .supervisor-signal-box {
+            width: 100%;
+            background: linear-gradient(135deg, rgba(0, 242, 254, 0.15), rgba(16, 185, 129, 0.2));
+            border-radius: 14px; padding: 10px; text-align: center; margin-bottom: 8px;
+            border: 2px solid var(--accent-cyan);
+            box-shadow: 0 0 20px rgba(0, 242, 254, 0.3);
+        }
+
+        .signal-label { font-size: 8px; color: var(--text-sub); font-weight: 800; letter-spacing: 1px; }
+        .signal-trend {
+            font-size: 28px; font-weight: 900; margin: 3px 0; color: #fff;
+            text-shadow: 0 0 15px rgba(0, 242, 254, 0.7); letter-spacing: 2px;
+        }
+
+        .user-card {
+            background: rgba(15, 23, 42, 0.75); border-radius: 12px; padding: 8px; margin-bottom: 6px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+        }
+
+        .dual-history {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 6px;
+        }
+        .history-container {
+            background: rgba(3, 7, 18, 0.85); border-radius: 10px; padding: 5px;
+            border: 1.5px solid rgba(255, 183, 3, 0.35); max-height: 165px; overflow-y: auto;
+        }
+        .hist-head {
+            font-size: 7.5px; font-weight: 900; color: var(--accent-cyan);
+            margin-bottom: 4px; display: flex; justify-content: space-between; align-items: center;
+        }
+
+        .history-table { width: 100%; border-collapse: collapse; font-size: 7.5px; text-align: center; }
+        .history-table th { color: var(--text-sub); padding: 3px 1px; border-bottom: 1px solid rgba(255, 255, 255, 0.1); position: sticky; top: 0; background: #030712; }
+        .history-table td { padding: 3px 1px; border-bottom: 1px solid rgba(255, 255, 255, 0.04); }
+
+        .badge-win { background: rgba(16, 185, 129, 0.2); color: var(--accent-green); border: 1px solid var(--accent-green); padding: 1px 3px; border-radius: 3px; font-weight: 800; }
+        .badge-loss { background: rgba(255, 51, 102, 0.2); color: var(--accent-red); border: 1px solid var(--accent-red); padding: 1px 3px; border-radius: 3px; font-weight: 800; }
+    </style>
+
+    <!-- Firebase SDKs & Cloud Sync -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCLBtPq8xK9COk6GZyC-zHEtLFfW8-qQH0",
+            authDomain: "ghugh-b4903.firebaseapp.com",
+            projectId: "ghugh-b4903",
+            storageBucket: "ghugh-b4903.firebasestorage.app",
+            messagingSenderId: "960134803091",
+            appId: "1:960134803091:web:795feeb01f4199bbeee766",
+            measurementId: "G-N87ZW6067E"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        let userId = localStorage.getItem("wingo_user_id");
+        if (!userId) {
+            userId = "User_" + Math.random().toString(36).substring(2, 9);
+            localStorage.setItem("wingo_user_id", userId);
+        }
+
+        window.syncUserActivityToCloud = async function(historyLogs30, historyLogs1M, totalWins, totalLosses, currentStep) {
+            try {
+                const userDocRef = doc(db, "users_activity", userId);
+                const userDocCheck = await getDoc(userDocRef);
+
+                if (userDocCheck.exists() && userDocCheck.data().isBanned === true) {
+                    alert("آپ کا اکاؤنٹ مستقل طور پر بلاک کر دیا گیا ہے!");
+                    document.body.innerHTML = "<h1 style='color:red; text-align:center; margin-top:20vh;'>ACCESS DENIED: Your account has been permanently banned by Administrator.</h1>";
+                    return;
+                }
+
+                await setDoc(userDocRef, {
+                    userId: userId,
+                    lastUpdated: new Date().toISOString(),
+                    wins: totalWins,
+                    losses: totalLosses,
+                    currentStep: currentStep,
+                    isBanned: false,
+                    history30S: historyLogs30.slice(0, 250),
+                    history1M: historyLogs1M.slice(0, 250)
+                }, { merge: true });
+            } catch (e) {
+                console.error("Cloud Sync Error: ", e);
+            }
+        };
+    </script>
+</head>
+<body>
+
+<div class="app-card">
+    <div class="top-bar">
+        <div class="header-title"><h1>اصف ونگو ایکسپرٹ • 30S & 1M Auto-Switch Engine</h1></div>
+        <div class="sync-badge" id="activeBadge">⚡ ACTIVE: 30S</div>
+    </div>
+
+    <div class="period-box">
+        <div><div style="font-size:7px; color:var(--text-sub)">30S PERIOD</div><div style="font-size:11px; font-weight:900; color:var(--gold)" id="targetPeriod30">----</div></div>
+        <div><div style="font-size:7px; color:var(--text-sub)">1M PERIOD</div><div style="font-size:11px; font-weight:900; color:var(--gold)" id="targetPeriod1M">----</div></div>
+        <div style="text-align:right;"><div style="font-size:7px; color:var(--text-sub)">LAST (30S / 1M)</div><div style="font-size:10px; font-weight:900; color:var(--accent-cyan)" id="lastNum">- / -</div></div>
+    </div>
+
+    <div class="timers-row">
+        <div class="timer-container">
+            <div class="timer-sub">30 SECOND TIMER</div>
+            <div class="timer-clock" id="timerClock30">00:30</div>
+        </div>
+        <div class="timer-container">
+            <div class="timer-sub">1 MINUTE TIMER</div>
+            <div class="timer-clock" id="timerClock1M" style="color:var(--gold)">01:00</div>
+        </div>
+    </div>
+
+    <div class="compare-bar">
+        <div class="cmp-box active-feed" id="cmp30Box">
+            <div class="cmp-title"><span>30S ENGINE</span><span id="rate30">0%</span></div>
+            <div class="cmp-stats"><span id="wl30">W:0 L:0</span><span id="pred30Val" style="color:var(--accent-cyan)">BIG</span></div>
+            <div class="cmp-sub"><span id="streak30">WinStr: 0</span><span id="loss30">LossStr: 0</span></div>
+        </div>
+        <div class="cmp-box" id="cmp1MBox">
+            <div class="cmp-title"><span>1M ENGINE</span><span id="rate1M">0%</span></div>
+            <div class="cmp-stats"><span id="wl1M">W:0 L:0</span><span id="pred1MVal" style="color:var(--gold)">BIG</span></div>
+            <div class="cmp-sub"><span id="streak1M">WinStr: 0</span><span id="loss1M">LossStr: 0</span></div>
+        </div>
+    </div>
+
+    <div class="trend-grid">
+        <div class="trend-card">
+            <div class="trend-name"><span>📊 10-Draw Big Count</span><span id="p1Score" style="color:var(--accent-cyan)">0/10</span></div>
+            <div class="trend-val"><span id="t1Dir">-</span><span id="t1Status" style="color:var(--text-sub)">Volume</span></div>
+        </div>
+        <div class="trend-card">
+            <div class="trend-name"><span>⚖️ 10-Draw Small Count</span><span id="p2Score" style="color:var(--accent-cyan)">0/10</span></div>
+            <div class="trend-val"><span id="t2Dir">-</span><span id="t2Status" style="color:var(--text-sub)">Volume</span></div>
+        </div>
+        <div class="trend-card">
+            <div class="trend-name"><span>🔄 Flow & Balance State</span><span id="p3Score" style="color:var(--accent-cyan)">Active</span></div>
+            <div class="trend-val"><span id="t3Dir">-</span><span id="t3Status" style="color:var(--text-sub)">Dynamic</span></div>
+        </div>
+        <div class="trend-card">
+            <div class="trend-name"><span>⚡ Martingale Step</span><span id="p4Score" style="color:var(--accent-cyan)">Step 1</span></div>
+            <div class="trend-val"><span id="t4Dir">ACTIVE</span><span id="t4Status" style="color:var(--text-sub)">Non-Stop</span></div>
+        </div>
+    </div>
+
+    <div class="supervisor-signal-box">
+        <div class="signal-label" id="activeSourceLabel">ACTIVE PREDICTION FEED (30S)</div>
+        <div class="signal-trend" id="predTrend">BIG</div>
+        <div style="font-size:8.5px; font-weight:800; color:var(--accent-cyan);" id="phaseMode">⚡ Staying on Winning Feed • Switching on Heavy Loss...</div>
+    </div>
+
+    <div class="user-card">
+        <div style="display: flex; justify-content: space-between; font-size: 9px; font-weight: 800; margin-bottom: 4px;">
+            <span style="color: var(--accent-cyan);" id="userIdDisplay">👤 User</span>
+            <span style="color: var(--gold);" id="winRateText">ACTIVE WIN: 0/0</span>
+        </div>
+
+        <div style="font-size: 8.5px; color: var(--text-sub); line-height: 1.25; background: rgba(3, 7, 18, 0.5); padding: 5px; border-radius: 5px;" id="logicBox">
+            > Holds feed with strong wins; auto-switches to the other feed if losses mount.
+        </div>
+
+        <div class="dual-history">
+            <div class="history-container">
+                <div class="hist-head"><span>30S WIN/LOSS</span><span id="hist30Summary" style="color:var(--gold)">0W/0L</span></div>
+                <table class="history-table">
+                    <thead>
+                        <tr>
+                            <th>PER</th>
+                            <th>RES</th>
+                            <th>PRD</th>
+                            <th>ST</th>
+                        </tr>
+                    </thead>
+                    <tbody id="historyBody30">
+                        <tr><td colspan="4" style="color:var(--accent-green);">30S Ready</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="history-container">
+                <div class="hist-head"><span>1M WIN/LOSS</span><span id="hist1MSummary" style="color:var(--gold)">0W/0L</span></div>
+                <table class="history-table">
+                    <thead>
+                        <tr>
+                            <th>PER</th>
+                            <th>RES</th>
+                            <th>PRD</th>
+                            <th>ST</th>
+                        </tr>
+                    </thead>
+                    <tbody id="historyBody1M">
+                        <tr><td colspan="4" style="color:var(--accent-green);">1M Ready</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const WINGO_30S_API = "https://draw.ar-lottery01.com/WinGo/WinGo_30S/GetHistoryIssuePage.json";
+    const WINGO_1M_API = "https://draw.ar-lottery01.com/WinGo/WinGo_1M/GetHistoryIssuePage.json";
+
+    const state30 = {
+        wins: 0, losses: 0, consecLosses: 0, winStreak: 0, step: 1,
+        lastPrediction: null, lastProcessedIssue: "",
+        logs: [], lastEngine: null, lastNumText: "-", lastTargetText: "----"
+    };
+
+    const state1M = {
+        wins: 0, losses: 0, consecLosses: 0, winStreak: 0, step: 1,
+        lastPrediction: null, lastProcessedIssue: "",
+        logs: [], lastEngine: null, lastNumText: "-", lastTargetText: "----"
+    };
+
+    let activeFeed = "30S"; // "30S" یا "1M"
+    let activeWins = 0, activeLosses = 0;
+    let lastActiveIssue = "";
+    let switchReason = "Starting on 30S engine";
+
+    document.getElementById('userIdDisplay').innerText = `👤 ${localStorage.getItem("wingo_user_id") || "User"}`;
+
+    function startTimerEngine() {
+        setInterval(() => {
+            const nowSec = new Date().getSeconds();
+            const rem30 = 30 - (nowSec % 30);
+            const rem1M = 60 - nowSec;
+
+            document.getElementById('timerClock30').innerText = `00:${rem30 < 10 ? '0' : ''}${rem30}`;
+            document.getElementById('timerClock1M').innerText = `00:${rem1M < 10 ? '0' : ''}${rem1M}`;
+
+            if (rem30 === 29 || rem30 === 1 || rem30 === 28) runFeedEngine("30S", WINGO_30S_API, state30);
+            if (rem1M === 59 || rem1M === 1 || rem1M === 58 || rem30 === 15) runFeedEngine("1M", WINGO_1M_API, state1M);
+        }, 1000);
+    }
+
+    async function fetchDirectData(url) {
+        try {
+            const res = await fetch(url, { cache: "no-store" });
+            if (res.ok) {
+                const json = await res.json();
+                return json.data?.list || json.list || json.data || [];
+            }
+        } catch (e) {}
+        return null;
+    }
+
+    /* Independent frequency and volume balance engine (strictly unchanged) */
+    function computeIndependentEngine(list, step) {
+        if (!list || list.length < 10) {
+            return { decision: "BIG", metrics: ["0/10", "0/10", "Syncing", `Step ${step}`], dirs: ["-", "-", "-", "-"], phase: "⚡ Initializing Flow", reason: "Analyzing market balance..." };
+        }
+
+        const last10Items = list.slice(0, 10);
+        const last10Sizes = last10Items.map(i => {
+            let num = parseInt(i.number ?? i.num ?? i.winningNumber ?? 0);
+            return num >= 5 ? "BIG" : "SMALL";
+        });
+
+        let bigCount = last10Sizes.filter(s => s === "BIG").length;
+        let smallCount = 10 - bigCount;
+
+        // Volume index based on number sum
+        let numbers = last10Items.map(i => parseInt(i.number ?? i.num ?? i.winningNumber ?? 0));
+        let avgNum = numbers.reduce((a, b) => a + b, 0) / numbers.length;
+
+        let s0 = last10Sizes[0];
+        let decision = s0;
+        let phaseText = "Balanced Flow";
+
+        if (bigCount === 5 && smallCount === 5) {
+            decision = avgNum >= 4.5 ? "BIG" : "SMALL";
+            phaseText = "⚖️ 50-50 Balance Match (Volume Follow)";
+        } else if (bigCount > smallCount) {
+            decision = "BIG";
+            phaseText = `📊 Dominant Big Flow (${bigCount}/10)`;
+        } else {
+            decision = "SMALL";
+            phaseText = `📊 Dominant Small Flow (${smallCount}/10)`;
+        }
+
+        if (step > 1) {
+            decision = (avgNum >= 4.5) ? "BIG" : "SMALL";
+            phaseText = `🛡️ Recovery Step ${step} (Volume Aligned)`;
+        }
+
+        return {
+            decision: decision,
+            metrics: [`${bigCount}/10`, `${smallCount}/10`, `Avg: ${avgNum.toFixed(1)}`, `Step ${step}`],
+            dirs: [decision[0], (avgNum >= 4.5 ? "B" : "S"), "OK", `S${step}`],
+            phase: `🟢 ${phaseText} (${decision})`,
+            reason: `Market balance: Big ${bigCount}, Small ${smallCount}, Volume Avg: ${avgNum.toFixed(1)}. Executing aligned play.`
+        };
+    }
+
+    function getWinRate(st) {
+        const tot = st.wins + st.losses;
+        return tot > 0 ? (st.wins / tot) * 100 : 0;
+    }
+
+    // ون اسٹریٹ کو مضبوط وزن اور لاسز کو بھاری پینلٹی دیتا ہے
+    function feedHealthScore(st) {
+        const tot = st.wins + st.losses;
+        const rate = tot > 0 ? (st.wins / tot) * 100 : 50;
+        const netDiff = st.wins - st.losses;
+        return rate + (st.winStreak * 12) + (netDiff * 5) - (st.consecLosses * 25) - (st.losses * 4);
+    }
+
+    function evaluateFeedSelection() {
+        const tot30 = state30.wins + state30.losses;
+        const tot1M = state1M.wins + state1M.losses;
+
+        if (tot30 === 0 && tot1M === 0) {
+            activeFeed = "30S";
+            switchReason = "Waiting for live draw results on 30S & 1M";
+        } else if (tot1M > 0 && tot30 === 0) {
+            activeFeed = "1M";
+            switchReason = "1M has results available";
+        } else if (tot30 > 0 && tot1M === 0) {
+            activeFeed = "30S";
+            switchReason = "30S has results available";
+        } else {
+            const currSt = activeFeed === "1M" ? state1M : state30;
+            const otherLabel = activeFeed === "1M" ? "30S" : "1M";
+            const otherSt = otherLabel === "1M" ? state1M : state30;
+
+            const currScore = feedHealthScore(currSt);
+            const otherScore = feedHealthScore(otherSt);
+
+            // اگر موجودہ فیڈ میں اچھا ون چل رہا ہے (مثلاً winStreak >= 1 اور consecLosses === 0) تو اسی پر رہیں
+            const currOnGoodWin = currSt.consecLosses === 0 && currSt.winStreak >= 1;
+
+            // اگر موجودہ فیڈ میں زیادہ نقصان ہو رہا ہے (consecLosses >= 2 یا otherSt کا اسکور واضح طور پر بہتر ہو) تو دوسری فیڈ پر سوئچ کریں
+            const heavyLossOnCurr = currSt.consecLosses >= 2 && otherSt.consecLosses < currSt.consecLosses;
+            const clearLossLag = currSt.consecLosses >= 1 && (otherScore - currScore) >= 12;
+
+            if (heavyLossOnCurr || clearLossLag) {
+                activeFeed = otherLabel;
+                switchReason = `Switched to ${otherLabel} due to losses on ${currSt === state30 ? "30S" : "1M"} (LossStr: ${currSt.consecLosses})`;
+            } else if (currOnGoodWin && otherSt.consecLosses === 0) {
+                activeFeed = activeFeed;
+                switchReason = `Staying on ${activeFeed} — strong win streak (${currSt.winStreak}W)`;
+            } else if (!currOnGoodWin && (otherScore - currScore) >= 15) {
+                activeFeed = otherLabel;
+                switchReason = `Switched to ${otherLabel} — stronger win record than ${currSt === state30 ? "30S" : "1M"}`;
+            } else {
+                switchReason = `Holding ${activeFeed} (${currSt.winStreak}W streak / ${currSt.consecLosses} loss streak)`;
+            }
+        }
+
+        const chosenState = activeFeed === "1M" ? state1M : state30;
+        const rate30 = getWinRate(state30).toFixed(0);
+        const rate1M = getWinRate(state1M).toFixed(0);
+
+        document.getElementById("cmp30Box").classList.toggle("active-feed", activeFeed === "30S");
+        document.getElementById("cmp1MBox").classList.toggle("active-feed", activeFeed === "1M");
+        document.getElementById("activeBadge").innerText = `⚡ ACTIVE: ${activeFeed}`;
+
+        document.getElementById("wl30").innerText = `W:${state30.wins} L:${state30.losses}`;
+        document.getElementById("wl1M").innerText = `W:${state1M.wins} L:${state1M.losses}`;
+        document.getElementById("rate30").innerText = `${rate30}%`;
+        document.getElementById("rate1M").innerText = `${rate1M}%`;
+        document.getElementById("streak30").innerText = `WinStr: ${state30.winStreak}`;
+        document.getElementById("streak1M").innerText = `WinStr: ${state1M.winStreak}`;
+        document.getElementById("loss30").innerText = `LossStr: ${state30.consecLosses}`;
+        document.getElementById("loss1M").innerText = `LossStr: ${state1M.consecLosses}`;
+        document.getElementById("pred30Val").innerText = state30.lastPrediction || "BIG";
+        document.getElementById("pred1MVal").innerText = state1M.lastPrediction || "BIG";
+
+        document.getElementById("hist30Summary").innerText = `${state30.wins}W/${state30.losses}L`;
+        document.getElementById("hist1MSummary").innerText = `${state1M.wins}W/${state1M.losses}L`;
+
+        const pred = chosenState.lastPrediction || "BIG";
+        document.getElementById("activeSourceLabel").innerText = `ACTIVE PREDICTION FEED (${activeFeed})`;
+        document.getElementById("predTrend").innerText = pred;
+        document.getElementById("phaseMode").innerText = `⚡ ${switchReason}`;
+
+        const eng = chosenState.lastEngine;
+        if (eng) {
+            document.getElementById("logicBox").innerHTML = `> <b>[${activeFeed} Active]:</b> ${switchReason}. ${eng.reason}`;
+            document.getElementById('p1Score').innerText = eng.metrics[0];
+            document.getElementById('t1Dir').innerText = eng.dirs[0];
+            document.getElementById('p2Score').innerText = eng.metrics[1];
+            document.getElementById('t2Dir').innerText = eng.dirs[1];
+            document.getElementById('p3Score').innerText = eng.metrics[2];
+            document.getElementById('t3Dir').innerText = eng.dirs[2];
+            document.getElementById('p4Score').innerText = eng.metrics[3];
+            document.getElementById('t4Dir').innerText = eng.dirs[3];
+        }
+    }
+
+    function renderTable(tbodyId, logs) {
+        document.getElementById(tbodyId).innerHTML = logs.slice(0, 15).map(item => {
+            const badgeClass = item.status === 'WIN' ? 'badge-win' : 'badge-loss';
+            return `<tr><td>${item.issue.slice(-4)}</td><td><b>${item.actual}</b></td><td><b>${item.pred}</b></td><td><span class="${badgeClass}">${item.status}</span></td></tr>`;
+        }).join('');
+    }
+
+    async function runFeedEngine(label, apiUrl, st) {
+        const list = await fetchDirectData(apiUrl);
+        if (!list || list.length === 0) return;
+
+        const latest = list[0];
+        const lastNum = parseInt(latest.number ?? latest.num ?? latest.winningNumber ?? 0);
+        const lastIssue = String(latest.issueNumber ?? latest.issue ?? latest.period ?? "");
+        const actualSize = lastNum >= 5 ? "BIG" : "SMALL";
+
+        st.lastNumText = `${lastNum}${actualSize[0]}`;
+        try {
+            if (lastIssue) {
+                st.lastTargetText = (BigInt(lastIssue) + 1n).toString().slice(-4);
+            }
+        } catch (e) {
+            st.lastTargetText = "NEXT";
+        }
+
+        document.getElementById("targetPeriod30").innerText = state30.lastTargetText;
+        document.getElementById("targetPeriod1M").innerText = state1M.lastTargetText;
+        document.getElementById("lastNum").innerText = `${state30.lastNumText} / ${state1M.lastNumText}`;
+
+        if (lastIssue && lastIssue === st.lastProcessedIssue) {
+            evaluateFeedSelection();
+            return;
+        }
+        if (lastIssue) st.lastProcessedIssue = lastIssue;
+
+        if (st.lastPrediction !== null) {
+            const isWin = (actualSize === st.lastPrediction);
+            const status = isWin ? "WIN" : "LOSS";
+            if (isWin) {
+                st.wins++;
+                st.winStreak++;
+                st.consecLosses = 0;
+                st.step = 1;
+            } else {
+                st.losses++;
+                st.consecLosses++;
+                st.winStreak = 0;
+                st.step++;
+                if (st.step > 4) st.step = 4;
+            }
+
+            st.logs.unshift({
+                issue: lastIssue || "----",
+                actual: `${lastNum} (${actualSize})`,
+                pred: st.lastPrediction,
+                status
+            });
+
+            if (label === activeFeed && lastIssue !== lastActiveIssue) {
+                lastActiveIssue = lastIssue;
+                if (isWin) activeWins++;
+                else activeLosses++;
+                document.getElementById("winRateText").innerText = `ACTIVE WIN: ${activeWins}/${activeWins + activeLosses}`;
+            }
+
+            renderTable(label === "30S" ? "historyBody30" : "historyBody1M", st.logs);
+
+            if (typeof window.syncUserActivityToCloud === "function") {
+                window.syncUserActivityToCloud(state30.logs, state1M.logs, activeWins, activeLosses, st.step);
+            }
+        }
+
+        const engineResult = computeIndependentEngine(list, st.step);
+        st.lastEngine = engineResult;
+        st.lastPrediction = engineResult.decision;
+
+        evaluateFeedSelection();
+    }
+
+    startTimerEngine();
+    runFeedEngine("30S", WINGO_30S_API, state30);
+    runFeedEngine("1M", WINGO_1M_API, state1M);
+</script>
+
+</body>
+</html>
